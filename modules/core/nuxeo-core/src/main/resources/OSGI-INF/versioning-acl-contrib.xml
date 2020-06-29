@@ -9,4 +9,11 @@
     <property name="org.nuxeo.version.acl.disabled">false</property>
   </extension>
 
+  <extension target="org.nuxeo.runtime.ConfigurationService" point="configuration">
+    <documentation>
+      Configuration property (true or false) controlling whether ReadVersion ACLs are disabled.
+    </documentation>
+    <property name="org.nuxeo.version.readversion.acl.disabled">false</property>
+  </extension>
+
 </component>

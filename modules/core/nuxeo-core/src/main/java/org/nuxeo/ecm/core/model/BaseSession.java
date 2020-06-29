@@ -19,6 +19,7 @@
 package org.nuxeo.ecm.core.model;
 
 import java.util.HashMap;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.Optional;
 
@@ -49,6 +50,11 @@ public abstract class BaseSession implements Session<QueryFilter> {
      * Configuration property controlling whether ACLs on versions are disabled.
      */
     public static final String VERSION_ACL_DISABLED_PROP = "org.nuxeo.version.acl.disabled";
+
+    /**
+     * Configuration property controlling whether ReadVersion ACLs are disabled.
+     */
+    public static final String READ_VERSION_ACL_DISABLED_PROP = "org.nuxeo.version.readversion.acl.disabled";
 
     /** INTERNAL. How we deal with ACLs on versions. */
     public enum VersionAclMode {
@@ -83,13 +89,25 @@ public abstract class BaseSession implements Session<QueryFilter> {
         }
     }
 
+    public static boolean isReadVersionACLDisabled() {
+        if (!Framework.isInitialized()) {
+            // unit tests
+            return false;
+        }
+        ConfigurationService configurationService = Framework.getService(ConfigurationService.class);
+        return configurationService.isBooleanTrue(READ_VERSION_ACL_DISABLED_PROP);
+    }
+
     protected final Repository repository;
 
-    protected final boolean disableVersionACL;
+    protected final VersionAclMode versionAclMode;
+
+    protected final boolean disableReadVersionACL;
 
     protected BaseSession(Repository repository) {
         this.repository = repository;
-        disableVersionACL = VersionAclMode.getConfiguration() != VersionAclMode.ENABLED;
+        versionAclMode = VersionAclMode.getConfiguration();
+        disableReadVersionACL = isReadVersionACLDisabled();
     }
 
     protected DocumentBlobManager getDocumentBlobManager() {
@@ -138,16 +156,27 @@ public abstract class BaseSession implements Session<QueryFilter> {
      */
     public abstract ACP getACP(Document doc);
 
+    protected ACP getACP(Document doc, boolean replaceReadVersionACL) {
+        ACP acp = getACP(doc);
+        if (acp != null && replaceReadVersionACL) {
+            // if ReadVersion is present in an ACE, turn it into a Read
+            acp.replacePermission(SecurityConstants.READ_VERSION, SecurityConstants.READ);
+        }
+        return acp;
+    }
+
     @Override
     public ACP getMergedACP(Document doc) {
-        if (disableVersionACL && doc.isVersion()) {
+        boolean replaceReadVersionACL = false;
+        if (doc.isVersion() && versionAclMode != VersionAclMode.ENABLED) {
+            replaceReadVersionACL = !disableReadVersionACL;
             doc = doc.getSourceDocument();
             if (doc == null) {
                 // version with no live doc
                 return null;
             }
         }
-        ACP acp = getACP(doc);
+        ACP acp = getACP(doc, replaceReadVersionACL);
         ACP mergedAcp = acp;
         ACL inherited = new ACLImpl(ACL.INHERITED_ACL, true); // collected inherited ACEs
         for (;;) {
@@ -155,14 +184,18 @@ public abstract class BaseSession implements Session<QueryFilter> {
                 // blocking, no need to continue
                 break;
             }
-            // move one inheritance level up
-            doc = doc.isVersion() ? doc.getSourceDocument() : doc.getParent();
+            if (doc.isVersion()) {
+                replaceReadVersionACL = !disableReadVersionACL;
+                doc = doc.getSourceDocument();
+            } else {
+                doc = doc.getParent();
+            }
             if (doc == null) {
                 // can't go up
                 break;
             }
             // collect inherited ACEs for this level
-            acp = getACP(doc);
+            acp = getACP(doc, replaceReadVersionACL);
             if (acp != null) {
                 inherited.addAll(acp.getMergedACLs(ACL.INHERITED_ACL));
             }

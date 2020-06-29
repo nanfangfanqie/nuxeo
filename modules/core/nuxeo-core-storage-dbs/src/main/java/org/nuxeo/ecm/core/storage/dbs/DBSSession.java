@@ -127,6 +127,7 @@ import org.nuxeo.ecm.core.model.BaseSession;
 import org.nuxeo.ecm.core.model.Document;
 import org.nuxeo.ecm.core.model.LockManager;
 import org.nuxeo.ecm.core.model.Session;
+import org.nuxeo.ecm.core.model.BaseSession.VersionAclMode;
 import org.nuxeo.ecm.core.query.QueryFilter;
 import org.nuxeo.ecm.core.query.QueryParseException;
 import org.nuxeo.ecm.core.query.sql.NXQL;
@@ -611,6 +612,10 @@ public class DBSSession extends BaseSession {
         verState.put(KEY_BASE_VERSION_ID, null);
         boolean isMajor = Long.valueOf(0).equals(verState.get(KEY_MINOR_VERSION));
         verState.put(KEY_IS_LATEST_MAJOR_VERSION, isMajor ? TRUE : null);
+        // except in legacy mode, we don't copy the live ACL when creating a version
+        if (versionAclMode != VersionAclMode.LEGACY) {
+            verState.put(KEY_ACP, null);
+        }
 
         // update the doc to mark it checked in
         docState.put(KEY_IS_CHECKED_IN, TRUE);
