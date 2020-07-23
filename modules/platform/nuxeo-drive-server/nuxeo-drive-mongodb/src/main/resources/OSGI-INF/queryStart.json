@@ -1,0 +1,49 @@
+{
+  "$and": [
+    {
+      "repositoryId": "test"
+    },
+    {
+      "$or": [
+        { 
+          "$and": [
+            {
+              "$or": [
+                {
+                  "$and": [
+                    {
+                      "category": "eventDocumentCategory"
+                    },
+                    {
+                      "eventId": {
+                        "$in": [
+                          "documentCreated",
+                          "documentModified",
+                          "documentMoved",
+                          "documentCreatedByCopy",
+                          "documentRestored",
+                          "addedToCollection",
+                          "documentProxyPublished",
+                          "documentLocked",
+                          "documentUnlocked",
+                          "documentUntrashed"
+                        ]
+                      }
+                    }
+                  ]
+                }, 
+                {
+                  "$and": [
+                    {
+                      "category": "eventLifeCycleCategory"
+                    },
+                    {
+                      "eventId":  "lifecycle_transition_event"
+                    },
+                    {
+                      "docLifeCycle": { "$ne": "deleted" }
+                    }
+                  ]
+                }
+              ]
+            }

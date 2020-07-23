@@ -1,0 +1,26 @@
+          ]
+        },
+        {
+          "$and": [
+            {
+              "category": "NuxeoDrive"
+            },
+            {
+              "eventId": { "$ne": "rootUnregistered" }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "$and": [
+        {
+          "_id": { "$gt": ${lowerBound} }
+        },
+        {
+          "_id": { "$lte": ${upperBound} }
+        }
+      ]
+    }
+  ]
+}
