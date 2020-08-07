@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -342,7 +343,9 @@ public class RegistrationInfoImpl implements RegistrationInfo {
             String msg = "Failed to instantiate component: " + implementation;
             log.error(msg, e);
             msg += " (" + e.toString() + ')';
-            Framework.getRuntime().getMessageHandler().addError(msg);
+            Framework.getRuntime()
+                     .getMessageHandler()
+                     .addMessage(Level.SEVERE, msg, ComponentManagerImpl.class.getName());
             throw e;
         }
     }
@@ -443,7 +446,9 @@ public class RegistrationInfoImpl implements RegistrationInfo {
                             + xt.getExtensionPoint() + " in component: " + xt.getComponent().getName();
                     log.error(msg, e);
                     msg += " (" + e.toString() + ')';
-                    Framework.getRuntime().getMessageHandler().addError(msg);
+                    Framework.getRuntime()
+                             .getMessageHandler()
+                             .addMessage(Level.SEVERE, msg, ComponentManagerImpl.class.getName());
                 }
             }
         }
@@ -466,7 +471,9 @@ public class RegistrationInfoImpl implements RegistrationInfo {
                             + xt.getExtensionPoint() + " in component: " + xt.getComponent().getName();
                     log.error(msg, e);
                     msg += " (" + e.toString() + ')';
-                    Framework.getRuntime().getMessageHandler().addError(msg);
+                    Framework.getRuntime()
+                             .getMessageHandler()
+                             .addMessage(Level.SEVERE, msg, ComponentManagerImpl.class.getName());
                 }
             }
         }
@@ -501,7 +508,9 @@ public class RegistrationInfoImpl implements RegistrationInfo {
                         String message = "Failed to unregister extension. Contributor: " + xt.getComponent() + " to "
                                 + xt.getTargetComponent() + "; xpoint: " + xt.getExtensionPoint();
                         log.error(message, e);
-                        Framework.getRuntime().getMessageHandler().addError(message);
+                        Framework.getRuntime()
+                                 .getMessageHandler()
+                                 .addMessage(Level.SEVERE, message, ComponentManagerImpl.class.getName());
                     }
                 }
             }
@@ -574,27 +583,15 @@ public class RegistrationInfoImpl implements RegistrationInfo {
     }
 
     public void checkExtensions() {
-        // HashSet<String> targets = new HashSet<String>();
         for (ExtensionImpl xt : extensions) {
             if (xt.target == null) {
-                Framework.getRuntime().getMessageHandler().addWarning(
-                        "Bad extension declaration (no target attribute specified). Component: " + getName());
+                String msg = String.format(
+                        "Bad extension declaration (no target attribute specified) on component 's%'", getName());
+                Framework.getRuntime()
+                         .getMessageHandler()
+                         .addMessage(Level.WARNING, msg, ComponentManagerImpl.class.getName());
                 continue;
             }
-            // TODO do nothing for now -> fix the faulty components and then
-            // activate these warnings
-            // String key = xt.target.getName()+"#"+xt.getExtensionPoint();
-            // if (targets.contains(key)) { // multiple extensions to same
-            // target point declared in same component
-            // String message =
-            // "Component "+getName()+" contains multiple extensions to "+key;
-            // Framework.getRuntime().getMessageHandler().addWarning(message);
-            // //TODO: un-comment the following line if you want to treat this
-            // as a dev. error
-            // //Framework.handleDevError(new Error(message));
-            // } else {
-            // targets.add(key);
-            // }
         }
     }
 

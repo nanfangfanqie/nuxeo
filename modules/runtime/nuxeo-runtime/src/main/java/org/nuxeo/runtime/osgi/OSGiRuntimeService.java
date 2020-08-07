@@ -38,6 +38,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -53,6 +54,7 @@ import org.nuxeo.runtime.Version;
 import org.nuxeo.runtime.api.Framework;
 import org.nuxeo.runtime.model.ComponentName;
 import org.nuxeo.runtime.model.RuntimeContext;
+import org.nuxeo.runtime.model.impl.ComponentManagerImpl;
 import org.nuxeo.runtime.model.impl.ComponentPersistence;
 import org.nuxeo.runtime.model.impl.RegistrationInfoImpl;
 import org.osgi.framework.Bundle;
@@ -232,7 +234,7 @@ public class OSGiRuntimeService extends AbstractRuntimeService implements Framew
             } else {
                 String message = "Unknown component '" + path + "' referenced by bundle '" + name + "'";
                 log.error(message + ". Check the MANIFEST.MF");
-                messageHandler.addError(message);
+                messageHandler.addMessage(Level.SEVERE, message, ComponentManagerImpl.class.getName());
             }
         }
     }

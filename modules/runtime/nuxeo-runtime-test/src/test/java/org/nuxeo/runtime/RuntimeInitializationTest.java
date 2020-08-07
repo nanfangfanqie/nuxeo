@@ -20,13 +20,15 @@
 
 package org.nuxeo.runtime;
 
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertEquals;
+
+import java.util.List;
 
 import javax.inject.Inject;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.nuxeo.runtime.api.Framework;
 import org.nuxeo.runtime.test.runner.Deploy;
 import org.nuxeo.runtime.test.runner.Features;
 import org.nuxeo.runtime.test.runner.FeaturesRunner;
@@ -47,18 +49,47 @@ public class RuntimeInitializationTest {
         // do nothing
     }
 
+    protected void checkDupe(boolean detected) {
+        List<String> errors = Framework.getRuntime().getMessageHandler().getErrors();
+        if (detected) {
+            assertEquals(List.of("Duplicate component name: service:my.comp2"), errors);
+            System.err.println(Framework.getRuntime().getMessageHandler().getMessages(null).get(0).getSource());
+        } else {
+            assertEquals(0, errors.size());
+        }
+    }
+
     @Test
     @Deploy("org.nuxeo.runtime.test.tests:MyComp1.xml")
     @Deploy("org.nuxeo.runtime.test.tests:MyComp2.xml")
-    @Ignore("Deactivated for now since duplicate contributions are still allowed.")
+    @Deploy("org.nuxeo.runtime.test.tests:CopyOfMyComp2.xml")
     public void testContributionsWithDuplicateComponent() throws Exception {
-        boolean success = false;
-        try {
-            hotDeployer.deploy("org.nuxeo.runtime.test.tests:CopyOfMyComp2.xml");
-            success = true;
-        } catch (AssertionError e) {
-            // OK.
-        }
-        assertFalse("An exception should have been raised.", success);
+        checkDupe(true);
     }
+
+    @Test
+    @Deploy("org.nuxeo.runtime.test.tests:MyComp1.xml")
+    @Deploy("org.nuxeo.runtime.test.tests:MyComp2.xml")
+    @Deploy("org.nuxeo.runtime.test.tests:MyComp2.xml")
+    public void testContributionsWithDuplicateComponentSameFile() throws Exception {
+        // dupe annotation on tests not detected (?)
+        checkDupe(false);
+    }
+
+    @Test
+    @Deploy("org.nuxeo.runtime.test.tests:MyComp1.xml")
+    @Deploy("org.nuxeo.runtime.test.tests:MyComp2.xml")
+    public void testContributionsWithDuplicateComponentSameFileHotReload() throws Exception {
+        hotDeployer.deploy("org.nuxeo.runtime.test.tests:MyComp2.xml");
+        checkDupe(true);
+    }
+
+    @Test
+    @Deploy("org.nuxeo.runtime.test.tests:MyComp1.xml")
+    @Deploy("org.nuxeo.runtime.test.tests:MyComp2.xml")
+    public void testContributionsWithDuplicateComponentHotReload() throws Exception {
+        hotDeployer.deploy("org.nuxeo.runtime.test.tests:CopyOfMyComp2.xml");
+        checkDupe(true);
+    }
+
 }

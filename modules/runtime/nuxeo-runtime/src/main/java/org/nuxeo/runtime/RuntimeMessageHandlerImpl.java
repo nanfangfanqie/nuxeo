@@ -15,15 +15,18 @@
  *
  * Contributors:
  *     Kevin Leturc <kleturc@nuxeo.com>
+ *     Anahide Tchertchian
  */
 package org.nuxeo.runtime;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
+import org.nuxeo.runtime.RuntimeMessage.ComponentManagerStep;
 import org.nuxeo.runtime.model.ComponentManager;
 
 /**
@@ -34,30 +37,30 @@ import org.nuxeo.runtime.model.ComponentManager;
  */
 public class RuntimeMessageHandlerImpl implements RuntimeMessageHandler, ComponentManager.Listener {
 
-    protected final List<Message> messages = new ArrayList<>();
+    protected final List<RuntimeMessage> messages = new ArrayList<>();
 
-    protected ComponentManagerStep step = ComponentManagerStep.ACTIVATING;
+    protected ComponentManagerStep currentStep = ComponentManagerStep.INITIALIZING;
 
     @Override
+    @Deprecated
     public void addWarning(String message) {
-        messages.add(new Message(step, Level.WARNING, message));
+        addMessage(new RuntimeMessage(currentStep, Level.WARNING, message));
     }
 
     @Override
     public List<String> getWarnings() {
-        return messages.stream().filter(msg -> Level.WARNING.equals(msg.getLevel())).map(Message::getMessage).collect(
-                Collectors.collectingAndThen(Collectors.toList(), Collections::unmodifiableList));
+        return getMessageStrings(msg -> Level.WARNING.equals(msg.getLevel()));
     }
 
     @Override
+    @Deprecated
     public void addError(String message) {
-        messages.add(new Message(step, Level.SEVERE, message));
+        addMessage(new RuntimeMessage(currentStep, Level.SEVERE, message));
     }
 
     @Override
     public List<String> getErrors() {
-        return messages.stream().filter(msg -> Level.SEVERE.equals(msg.getLevel())).map(Message::getMessage).collect(
-                Collectors.collectingAndThen(Collectors.toList(), Collections::unmodifiableList));
+        return getMessageStrings(msg -> Level.SEVERE.equals(msg.getLevel()));
     }
 
     @Override
@@ -86,56 +89,43 @@ public class RuntimeMessageHandlerImpl implements RuntimeMessageHandler, Compone
     }
 
     protected void changeStep(ComponentManagerStep step) {
-        messages.removeIf(msg -> step.equals(msg.getStep()));
-        this.step = step;
+        this.currentStep = step;
     }
 
-    /**
-     * @since 9.10
-     */
-    protected static class Message {
-
-        protected final ComponentManagerStep step;
-
-        protected final Level level;
-
-        protected final String message;
-
-        public Message(ComponentManagerStep step, Level level, String message) {
-            this.step = step;
-            this.level = level;
-            this.message = message;
-        }
-
-        public ComponentManagerStep getStep() {
-            return step;
-        }
-
-        public Level getLevel() {
-            return level;
-        }
-
-        public String getMessage() {
-            return message;
-        }
-
+    @Override
+    public void addMessage(RuntimeMessage message) {
+        messages.add(message);
     }
 
-    /**
-     * @since 9.10
-     */
-    protected enum ComponentManagerStep {
+    @Override
+    public void addMessage(Level level, String message, String source) {
+        addMessage(new RuntimeMessage(currentStep, level, message, source));
+    }
 
-        ACTIVATING,
+    protected Predicate<RuntimeMessage> getFinalPredicate(Predicate<RuntimeMessage> givenPredicate) {
+        return givenPredicate == null ? m -> true : givenPredicate;
+    }
 
-        STARTING,
+    @Override
+    public List<RuntimeMessage> getMessages(Predicate<RuntimeMessage> predicate) {
+        final Predicate<RuntimeMessage> p = predicate == null ? m -> true : predicate;
+        return messages.stream()
+                       .filter(msg -> p.test(msg))
+                       .collect(Collectors.collectingAndThen(Collectors.toList(), Collections::unmodifiableList));
+    }
 
-        RUNNING,
+    @Override
+    public List<String> getMessageStrings(Predicate<RuntimeMessage> predicate) {
+        return getMessages(predicate).stream()
+                                     .map(RuntimeMessage::getMessage)
+                                     .collect(Collectors.collectingAndThen(Collectors.toList(),
+                                             Collections::unmodifiableList));
+    }
 
-        STOPPING,
-
-        DEACTIVATING
-
+    @Override
+    public void clear(Predicate<RuntimeMessage> predicate) {
+        final Predicate<RuntimeMessage> p = predicate == null ? m -> true : predicate;
+        messages.removeIf(msg -> p.test(msg));
     }
 
 }

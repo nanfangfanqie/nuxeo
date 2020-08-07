@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.logging.Level;
 
 import org.apache.commons.lang3.reflect.MethodUtils;
 import org.apache.commons.logging.Log;
@@ -243,7 +244,7 @@ public class ComponentInstanceImpl implements ComponentInstance {
             ee = ExceptionUtils.unwrapInvoke(e);
         }
         log.error(message, ee);
-        Framework.getRuntime().getMessageHandler().addError(message);
+        Framework.getRuntime().getMessageHandler().addMessage(Level.SEVERE, message, getClass().getName());
     }
 
     @Override
