@@ -22,7 +22,9 @@ package org.nuxeo.runtime.model;
 import static java.util.Objects.requireNonNull;
 
 import java.util.List;
+import java.util.logging.Level;
 
+import org.nuxeo.runtime.api.Framework;
 import org.nuxeo.runtime.model.impl.ComponentManagerImpl;
 
 /**
@@ -61,6 +63,10 @@ public class DefaultComponent implements Component, Adaptable {
             getRegistry().clear();
         }
         setModifiedNow();
+    }
+
+    protected void addRuntimeMessage(Level level, String message) {
+        Framework.getRuntime().getMessageHandler().addMessage(level, message, ComponentManagerImpl.class.getName());
     }
 
     @Override

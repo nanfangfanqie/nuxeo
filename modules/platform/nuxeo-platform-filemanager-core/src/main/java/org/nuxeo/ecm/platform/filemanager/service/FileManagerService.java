@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
@@ -209,7 +210,7 @@ public class FileManagerService extends DefaultComponent implements FileManager 
             String message = "Extension point 'versioning' has been deprecated and corresponding behavior removed from "
                     + "Nuxeo Platform. Please use versioning policy instead.";
             DeprecationLogger.log(message, "9.1");
-            Framework.getRuntime().getMessageHandler().addWarning(message);
+            addRuntimeMessage(Level.WARNING, message);
 
             String defver = versioningDescriptor.defaultVersioningOption;
             if (!StringUtils.isBlank(defver)) {

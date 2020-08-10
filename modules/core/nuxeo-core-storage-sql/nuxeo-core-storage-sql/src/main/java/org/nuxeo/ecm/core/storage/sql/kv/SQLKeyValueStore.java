@@ -37,6 +37,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
+import java.util.logging.Level;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
@@ -486,7 +487,9 @@ public class SQLKeyValueStore extends AbstractKeyValueStoreProvider {
                 String message = column.checkJdbcType(actual, actualName, actualSize);
                 if (message != null) {
                     log.error(message);
-                    Framework.getRuntime().getMessageHandler().addError(message);
+                    Framework.getRuntime()
+                             .getMessageHandler()
+                             .addMessage(Level.SEVERE, message, SQLKeyValueStore.class.getName());
                 }
             }
         }

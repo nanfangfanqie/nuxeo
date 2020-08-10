@@ -51,6 +51,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
 
 import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
@@ -274,7 +275,9 @@ public class JDBCMapper extends JDBCRowMapper implements Mapper {
                         String message = column.checkJdbcType(type, actualName, actualSize);
                         if (message != null) {
                             log.error(message);
-                            Framework.getRuntime().getMessageHandler().addError(message);
+                            Framework.getRuntime()
+                                     .getMessageHandler()
+                                     .addMessage(Level.SEVERE, message, JDBCMapper.class.getName());
                         }
                     }
                 }

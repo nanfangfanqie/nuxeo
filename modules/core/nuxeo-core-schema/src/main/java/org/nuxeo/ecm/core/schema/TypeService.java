@@ -19,6 +19,8 @@
  */
 package org.nuxeo.ecm.core.schema;
 
+import java.util.logging.Level;
+
 import org.nuxeo.runtime.RuntimeServiceException;
 import org.nuxeo.runtime.api.Framework;
 import org.nuxeo.runtime.logging.DeprecationLogger;
@@ -90,7 +92,7 @@ public class TypeService extends DefaultComponent {
                     "Deprecation contribution on component: %s should now be contributed to extension point: %s ",
                     component.getName(), XP_SCHEMA);
             DeprecationLogger.log(message, "11.1");
-            Framework.getRuntime().getMessageHandler().addWarning(message);
+            addRuntimeMessage(Level.WARNING, message);
             break;
         default:
             throw new RuntimeServiceException("Unknown extension point: " + xp);

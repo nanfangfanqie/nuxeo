@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.logging.Level;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -267,7 +268,7 @@ public class NXAuditEventsService extends DefaultComponent {
                     "AuditBulker on component %s is deprecated because it is now handled with nuxeo-stream, no replacement.",
                     contributor.getName());
             DeprecationLogger.log(message, "10.10");
-            Framework.getRuntime().getMessageHandler().addWarning(message);
+            addRuntimeMessage(Level.WARNING, message);
         } else if (contribution instanceof AuditStorageDescriptor) {
             AuditStorageDescriptor auditStorageDesc = (AuditStorageDescriptor) contribution;
             auditStorageDescriptors.put(auditStorageDesc.getId(), auditStorageDesc);

@@ -25,6 +25,7 @@ import java.util.Deque;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
@@ -33,7 +34,6 @@ import org.nuxeo.ecm.core.api.CoreSession;
 import org.nuxeo.ecm.core.api.DocumentModel;
 import org.nuxeo.ecm.core.api.VersioningOption;
 import org.nuxeo.ecm.core.model.Document;
-import org.nuxeo.runtime.api.Framework;
 import org.nuxeo.runtime.logging.DeprecationLogger;
 import org.nuxeo.runtime.model.ComponentContext;
 import org.nuxeo.runtime.model.ComponentInstance;
@@ -201,14 +201,14 @@ public class VersioningComponent extends DefaultComponent implements VersioningS
                         (rule).getTypeName(), contributor.getName(), VERSIONING_POLICY_XP, VERSIONING_FILTER_XP,
                         VERSIONING_RESTRICTION_XP);
                 DeprecationLogger.log(message, "9.1");
-                Framework.getRuntime().getMessageHandler().addWarning(message);
+                addRuntimeMessage(Level.WARNING, message);
             } else if (contrib instanceof DefaultVersioningRuleDescriptor) {
                 registerDefaultVersioningRule((DefaultVersioningRuleDescriptor) contrib);
                 String message = String.format("Default versioning rule on component %s should now be contributed to "
                         + "extension points '%s' and '%s': a compatibility registration was performed but it may not be "
                         + "accurate.", contributor.getName(), VERSIONING_POLICY_XP, VERSIONING_RESTRICTION_XP);
                 DeprecationLogger.log(message, "9.1");
-                Framework.getRuntime().getMessageHandler().addWarning(message);
+                addRuntimeMessage(Level.WARNING, message);
             } else {
                 throw new RuntimeException("Unknown contribution to " + point + ": " + contrib.getClass());
             }

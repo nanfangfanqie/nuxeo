@@ -21,6 +21,7 @@ package org.nuxeo.ecm.core.uidgen;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.logging.Level;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -87,7 +88,8 @@ public class UIDGeneratorComponent extends DefaultComponent implements UIDGenera
         } else if (EXTENSION_POINT_SEQUENCER_FACTORY.equals(extPoint)) {
             String msg = "UIDSequencer factory no more supported from version 5.4. Faulty component: "
                     + extension.getComponent();
-            Framework.getRuntime().getMessageHandler().addWarning(msg);
+            addRuntimeMessage(Level.WARNING, msg, extension.getContext().getBundle(),
+                    extension.getComponent().getName().getRawName());
             log.error(msg);
         } else {
             log.warn("extension not handled: " + extPoint);
